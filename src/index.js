@@ -1,32 +1,43 @@
 module.exports = function check(str, bracketsConfig) {
-    let result = false;
-
-        //let subStr = str;
-        for (k = 0; k < str.length; k++) {
-            bracketsConfig.forEach(function checkOpen(v) {
-                if (v[0] === v[1]){
-                    result = ((str.indexOf(v[1],k+1) - k) === 1 && k - (str.indexOf(v[0])) === 1
-                        || ((str.indexOf(v[1],k+1) - k) % 2 === 1 )&& (k - str.indexOf(v[0])) % 2 === 1);
+    let checkBlock =  function(index, source, bracketsConfig, opener) {
+        let checkBlockResult = {};
+        checkBlockResult.index = index;
+        checkBlockResult.checkResult = false;
+        let check = checkBlockResult.index < source.length;
+        console.log(index, source, bracketsConfig, opener);
+        while (check) {
+            let symbol = source[checkBlockResult.index];
+            let brackets = bracketsConfig.filter((e) => e.indexOf(symbol) !== -1)[0];
+            let ind = brackets.indexOf(symbol);
+            if (brackets[0] === brackets[1]) {
+                if (opener === 'undefined' && opener !== brackets[0]) {
+                    ind = 0;
+                } else if (opener === brackets[0]){
+                    ind = 1;
                 }
-                else if (str[k] == v[0] && str.indexOf(v[1]) > -1 && str.indexOf(v[1]) > str.indexOf(v[0])) {
-                    result = (str.indexOf(v[1]) - k) === 1 || (str.indexOf(v[1]) - k) % 2 === 1;
-                    //subStr = subStr.slice(k);
-                    //let subStr1 = subStr.slice(0, ind);
-                    //let subStr2 = subStr.slice(ind+1, subStr.length);
-                    //subStr = subStr1 + subStr2;
+            }
+            if (ind === 0) {
+                //open block
+                checkBlockResult = checkBlock(checkBlockResult.index + 1, source, bracketsConfig, symbol);
+                if (!checkBlockResult.checkResult) {
+                    check = false;
+                } else {
+                    checkBlockResult.index = checkBlockResult.index + 1;
+                    check = checkBlockResult.index < source.length;
                 }
-                else if (str[k] == v[1] && str.indexOf(v[0]) > -1 && str.indexOf(v[1]) > str.indexOf(v[0])) {
-                    result = k - (str.indexOf(v[0])) === 1 || (k - str.indexOf(v[0])) % 2 === 1;
+            } else {
+                //close block
+                if (typeof opener !== 'undefined' && brackets[0] === opener) {
+                    checkBlockResult.checkResult = true;
+                } else {
+                    checkBlockResult.checkResult = false;
                 }
-                /*else  {
-                    //break;
-                    return result = ;
-
-                }*/
-            })
+                check = false;
+            }
         }
+        console.log(checkBlockResult);
+        return checkBlockResult;
+    };
 
-        //result = str.includes(v[0]) && str.includes(v[1]);
-        //return result;
-    return result;
+    return checkBlock(0, str, bracketsConfig).checkResult;
 };
